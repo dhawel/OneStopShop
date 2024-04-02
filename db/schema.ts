@@ -1,81 +1,60 @@
 // schema.ts
-import { InferModel } from "drizzle-orm";
 import {
-  boolean,
-  decimal,
-  int,
-  json,
-  mysqlTable,
-  serial,
+  integer,
+  sqliteTable,
   text,
   uniqueIndex,
-  varchar,
-} from "drizzle-orm/mysql-core";
+} from "drizzle-orm/sqlite-core";
 
-export const stores = mysqlTable(
-  "stores",
-  {
-    id: serial("id").primaryKey(),
-    name: varchar("store_name", { length: 40 }),
-    industry: text("industry"),
-    description: text("description"),
-    slug: varchar("slug", { length: 50 }),
-  },
-  (table) => {
-    return {
-      storeNameIndex: uniqueIndex("store_name_index").on(table.name),
-      storeSlugIndex: uniqueIndex("store_slug_index").on(table.slug),
-    };
-  }
-);
-
-export type Store = InferModel<typeof stores>;
-
-export const products = mysqlTable("products", {
-  id: serial("id").primaryKey(),
+export const products = sqliteTable("products", {
+  id: text("id").primaryKey(),
   name: text("name"),
-  price: decimal("price", { precision: 10, scale: 2 }).default("0"),
+  price: integer("price").default(0),
   description: text("description"),
-  inventory: decimal("inventory").default("0"),
-  images: json("images"),
-  storeId: int("store_id"),
+  inventory: integer("inventory").default(0),
+  images: text("images", { mode: "json" }),
+  storeId: integer("store_id"),
 });
-export type Product = InferModel<typeof products>;
 
-export const carts = mysqlTable("carts", {
-  id: serial("id").primaryKey(),
-  items: json("items"),
+export type Product = typeof products.$inferSelect;
+
+export const carts = sqliteTable("carts", {
+  id: text("id").primaryKey(),
+  items: text("items", {}),
   paymentIntentId: text("payment_intent_id"),
   clientSecret: text("client_secret"),
-  isClosed: boolean("is_closed").default(false),
+  isClosed: integer("is_closed", { mode: "boolean" }).default(false),
 });
-export type Cart = InferModel<typeof carts>;
 
-export const payments = mysqlTable("payments", {
-  id: serial("id").primaryKey(),
-  storeId: int("store_id"),
+export type Cart = typeof carts.$inferSelect;
+
+export const payments = sqliteTable("payments", {
+  id: text("id").primaryKey(),
+  storeId: integer("store_id"),
   stripeAccountId: text("stripe_account_id"),
-  stripeAccountCreatedAt: int("stripe_account_created_at"),
-  stripeAccountExpiresAt: int("stripe_account_expires_at"),
-  details_submitted: boolean("details_submitted").default(false),
+  stripeAccountCreatedAt: integer("stripe_account_created_at"),
+  stripeAccountExpiresAt: integer("stripe_account_expires_at"),
+  details_submitted: integer("details_submitted", { mode: "boolean" }).default(
+    false
+  ),
 });
 
-export type Payment = InferModel<typeof payments>;
+export type Payment = typeof payments.$inferSelect;
 
-export const orders = mysqlTable(
+export const orders = sqliteTable(
   "orders",
   {
-    id: serial("id").primaryKey(),
-    prettyOrderId: int("pretty_order_id"),
-    storeId: int("store_id"),
-    items: json("items"),
-    total: decimal("total", { precision: 10, scale: 2 }).default("0"),
-    stripePaymentIntentId: varchar("stripe_payment_intent_id", { length: 256 }), // text field is valid for uniqueIndex in MySQL
+    id: text("id").primaryKey(),
+    prettyOrderId: integer("pretty_order_id"),
+    storeId: integer("store_id"),
+    items: text("items", { mode: "json" }),
+    total: integer("total").default(0),
+    stripePaymentIntentId: text("stripe_payment_intent_id"),
     stripePaymentIntentStatus: text("stripe_payment_intent_status"),
     name: text("name"),
     email: text("email"),
-    createdAt: int("created_at"),
-    addressId: int("address"),
+    createdAt: integer("created_at"),
+    addressId: integer("address"),
   },
   (table) => {
     return {
@@ -86,10 +65,9 @@ export const orders = mysqlTable(
   }
 );
 
-export type Order = InferModel<typeof orders>;
-
-export const addresses = mysqlTable("addresses", {
-  id: serial("id").primaryKey(),
+export type Order = typeof orders.$inferSelect;
+export const addresses = sqliteTable("addresses", {
+  id: text("id").primaryKey(),
   line1: text("line1"),
   line2: text("line2"),
   city: text("city"),
@@ -98,4 +76,4 @@ export const addresses = mysqlTable("addresses", {
   country: text("country"),
 });
 
-export type Address = InferModel<typeof addresses>;
+export type Address = typeof addresses.$inferSelect;

@@ -1,19 +1,6 @@
-// db.ts
-import { drizzle } from "drizzle-orm/planetscale-serverless";
-import { connect } from "@planetscale/database";
-import { migrate } from "drizzle-orm/mysql2/migrator";
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
 
-// create the connection
-const connection = connect({
-  host: process.env["DATABASE_HOST"],
-  username: process.env["DATABASE_USERNAME"],
-  password: process.env["DATABASE_PASSWORD"],
-});
+const client = createClient({ url: 'libsql://shop-dev-dhawel.turso.io', authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MTIwNzI0ODgsImlkIjoiMTU0YjBlMDUtM2E1Mi00ZTRmLTllNTktYmZiOTg0YjI0OTFmIn0.jki1QHRZ9A81RD_4F9h-J2kE_y2S4_F22mAJUjenu3Jo95CChOIZ2IahgpHvK2LYtx0FQLgouq6c5pT8dIzZAQ' });
 
-export const db = drizzle(connection);
-
-// syncs the migrations folder to PlanetScale
-process.env.NODE_ENV === "development" &&
-  migrate(db as any, { migrationsFolder: "./migrations-folder" })
-    .then((res) => res)
-    .catch((err) => console.log("Migration error in db.ts:", err));
+export const db = drizzle(client);
