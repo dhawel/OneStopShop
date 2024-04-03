@@ -1,9 +1,11 @@
 // schema.ts
+import { sql } from "drizzle-orm";
 import {
   integer,
   sqliteTable,
   text,
   uniqueIndex,
+  primaryKey
 } from "drizzle-orm/sqlite-core";
 
 export const products = sqliteTable("products", {
@@ -44,7 +46,7 @@ export type Payment = typeof payments.$inferSelect;
 export const orders = sqliteTable(
   "orders",
   {
-    id: text("id").primaryKey(),
+    id: integer("id").primaryKey({autoIncrement: true}),
     prettyOrderId: integer("pretty_order_id"),
     storeId: integer("store_id"),
     items: text("items", { mode: "json" }),
@@ -53,7 +55,9 @@ export const orders = sqliteTable(
     stripePaymentIntentStatus: text("stripe_payment_intent_status"),
     name: text("name"),
     email: text("email"),
-    createdAt: integer("created_at"),
+    createdAt: integer("created_at", { mode: "timestamp" })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
     addressId: integer("address"),
   },
   (table) => {
@@ -67,7 +71,7 @@ export const orders = sqliteTable(
 
 export type Order = typeof orders.$inferSelect;
 export const addresses = sqliteTable("addresses", {
-  id: text("id").primaryKey(),
+  id: integer("id").primaryKey({autoIncrement: true}),
   line1: text("line1"),
   line2: text("line2"),
   city: text("city"),

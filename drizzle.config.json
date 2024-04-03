@@ -1,5 +1,0 @@
-{
-  "out": "./migrations-folder",
-  "schema": "./db/schema.ts",
-  "breakpoints": true
-}

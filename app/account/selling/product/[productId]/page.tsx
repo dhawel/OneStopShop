@@ -12,16 +12,12 @@ import { and, eq } from "drizzle-orm";
 export default async function ProductDetailPage(props: {
   params: { productId: string };
 }) {
-  const user = await currentUser();
 
   const productDetails = await db
     .select()
     .from(products)
     .where(
-      and(
-        eq(products.storeId, Number(user?.privateMetadata.storeId)),
-        eq(products.id, Number(props.params.productId))
-      )
+      eq(products.id, props.params.productId),
     )
     .then((res) => {
       if (res.length === 0) {

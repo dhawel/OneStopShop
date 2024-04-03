@@ -1,12 +1,11 @@
-import { addresses, products } from "./../../../../db/schema";
 import { db } from "@/db/db";
 import { carts, orders, payments } from "@/db/schema";
-import { CheckoutItem } from "@/lib/types";
-import { SQL, eq, inArray, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { Readable } from "stream";
 import Stripe from "stripe";
+import { addresses } from "./../../../../db/schema";
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -96,37 +95,40 @@ export async function POST(request: Request) {
         // create new address in DB
         const stripeAddress = stripeObject?.shipping?.address;
 
-        const newAddress = await db.insert(addresses).values({
-          line1: stripeAddress?.line1,
-          line2: stripeAddress?.line2,
-          city: stripeAddress?.city,
-          state: stripeAddress?.state,
-          postal_code: stripeAddress?.postal_code,
-          country: stripeAddress?.country,
-        });
+        const newAddress = await db
+          .insert(addresses)
+          .values({
+            line1: stripeAddress?.line1,
+            line2: stripeAddress?.line2,
+            city: stripeAddress?.city,
+            state: stripeAddress?.state,
+            postal_code: stripeAddress?.postal_code,
+            country: stripeAddress?.country,
+          })
+          .returning({ insertId: addresses.id });
 
-        if (!newAddress.insertId) throw new Error("No address created");
+        if (!newAddress[0].insertId) throw new Error("No address created");
 
         // get current order count in DB
-        const storeOrderCount = await db
-          .select({ count: sql<number>`count(*)` })
+        const storeOrders = await db
+          .select({ id: orders.id })
           .from(orders)
           .where(eq(orders.storeId, storeId));
-
+        const storeOrderCount = storeOrders.length;
         // create new order in DB
-        const newOrder = await db.insert(orders).values({
-          prettyOrderId: Number(storeOrderCount[0].count) + 1,
-          storeId: storeId,
-          items: stripeObject.metadata?.items,
-          total: String(Number(orderTotal) / 100),
-          stripePaymentIntentId: paymentIntentId,
-          stripePaymentIntentStatus: stripeObject?.status,
-          name: stripeObject?.shipping?.name,
-          email: stripeObject?.receipt_email,
-          createdAt: event.created,
-          addressId: Number(newAddress.insertId),
-        });
-        console.log("ORDER CREATED", newOrder);
+        // const newOrder = await db.insert(orders).values({
+        //   prettyOrderId: Number(storeOrderCount) + 1,
+        //   storeId: storeId,
+        //   items: stripeObject.metadata?.items,
+        //   total: String(Number(orderTotal) / 100),
+        //   stripePaymentIntentId: paymentIntentId,
+        //   stripePaymentIntentStatus: stripeObject?.status,
+        //   name: stripeObject?.shipping?.name,
+        //   email: stripeObject?.receipt_email,
+        //   createdAt: event.created,
+        //   addressId: Number(newAddress[0].insertId),
+        // });
+        console.log("ORDER CREATED");
       } catch (err) {
         console.log("ORDER CREATION WEBHOOK ERROR", err);
       }

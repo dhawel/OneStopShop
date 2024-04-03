@@ -42,7 +42,7 @@ export const CartLineItems = (props: {
       <TableBody>
         {props.products.map((product) => {
           const currentProductInCart = props.cartItems.find(
-            (item) => item.id === product.id
+            (item) => item.id === Number(product.id)
           );
           return (
             <TableRow key={product.id}>

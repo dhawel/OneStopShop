@@ -13,8 +13,8 @@ import Link from "next/link";
 
 export const ProductForm = (props: {
   addToCartAction: typeof addToCart;
-  availableInventory: string | null;
-  productId: number;
+  availableInventory: number | null;
+  productId: string ;
   productName: string | null;
   disableQuantitySelector?: boolean;
   buttonSize?: "default" | "sm";
@@ -52,7 +52,7 @@ export const ProductForm = (props: {
             startTransition(
               () =>
                 void props.addToCartAction({
-                  id: props.productId,
+                  id: Number(props.productId),
                   qty: Number(quantity),
                 })
             );
